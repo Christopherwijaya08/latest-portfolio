@@ -1,0 +1,274 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tokens from DESIGN.md */
+@theme {
+  --font-sans: 'Geist', Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-ink: #171717;
+  --color-body: #4d4d4d;
+  --color-mute: #6b6b6b;
+  --color-hairline: #ebebeb;
+  --color-hairline-strong: #a1a1a1;
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #fafafa;
+  --color-canvas-soft-2: #f5f5f5;
+  --color-link: #0070f3;
+  --color-link-deep: #0761d1;
+  --color-link-bg-soft: #d3e5ff;
+  --color-cyan: #50e3c2;
+  --color-cyan-deep: #29bc9b;
+  --color-violet: #7928ca;
+  --color-pink: #ff0080;
+  --color-warning: #f5a623;
+  --color-error: #ee0000;
+  --color-on-ink: #ffffff;
+  --color-ink-hover: #383838;
+  /* Always-dark bands (featured project, footer). Same in both themes. */
+  --color-band: #171717;
+
+  --shadow-card: 0 0 0 1px #00000014, 0px 2px 2px #0000000a, 0px 8px 8px -8px #0000000a;
+  --shadow-float: 0 0 0 1px #00000014, 0px 2px 2px #0000000a, 0px 8px 16px -4px #0000000a;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 4rem;
+  }
+  body {
+    @apply bg-canvas-soft font-sans text-ink antialiased;
+  }
+  ::selection {
+    background: #171717;
+    color: #f2f2f2;
+  }
+  .dark ::selection {
+    background: #ededed;
+    color: #0a0a0a;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* Dark theme: only token values change, so light mode stays exactly as designed. */
+.dark {
+  color-scheme: dark;
+  --color-ink: #ededed;
+  --color-body: #a1a1a1;
+  --color-mute: #8f8f8f;
+  --color-hairline: #262626;
+  --color-hairline-strong: #525252;
+  --color-canvas: #111111;
+  --color-canvas-soft: #0a0a0a;
+  --color-canvas-soft-2: #1a1a1a;
+  --color-link: #52a8ff;
+  --color-link-deep: #8cc4ff;
+  --color-link-bg-soft: #0d2847;
+  --color-violet: #9d5cf0;
+  --color-error: #ff5c5c;
+  --color-on-ink: #0a0a0a;
+  --color-ink-hover: #cfcfcf;
+  --shadow-card: 0 0 0 1px #ffffff1a, 0px 2px 2px #00000052, 0px 8px 8px -8px #00000052;
+  --shadow-float: 0 0 0 1px #ffffff1f, 0px 2px 2px #00000052, 0px 8px 16px -4px #00000066;
+}
+
+/* Theme switch: the new theme grows as a circle from the toggle (--tx / --ty). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  animation: theme-reveal 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes theme-reveal {
+  from { clip-path: circle(0 at var(--tx, 50%) var(--ty, 0)); }
+  to { clip-path: circle(150vmax at var(--tx, 50%) var(--ty, 0)); }
+}
+
+/* The one decorative system: the hero mesh gradient. */
+.mesh {
+  background:
+    radial-gradient(40% 55% at 18% 40%, #007cf0aa, transparent 70%),
+    radial-gradient(35% 50% at 40% 20%, #00dfd899, transparent 70%),
+    radial-gradient(40% 55% at 62% 45%, #7928ca88, transparent 70%),
+    radial-gradient(35% 50% at 80% 25%, #ff008077, transparent 70%),
+    radial-gradient(40% 55% at 88% 70%, #f9cb2888, transparent 70%);
+  filter: blur(48px) saturate(1.1);
+}
+
+/* Scroll reveal, desktop only. Browsers without scroll-driven animations just show the content. */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+    .reveal:nth-child(even) {
+      animation-range: entry 15% entry 85%;
+    }
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translateY(48px) scale(0.98);
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* --mx / --my (-1..1) come from the pointer position in Hero. */
+  .mesh {
+    translate: calc(var(--mx, 0) * 60px) calc(var(--my, 0) * 40px);
+    transition: translate 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @keyframes drift {
+    to {
+      transform: translate3d(2%, 3%, 0) scale(1.05);
+    }
+  }
+}
+
+/* Card spotlight that follows the pointer (set by trackPointer). Mouse/trackpad only. */
+.spot {
+  position: relative;
+  --spot: rgb(0 112 243 / 0.07);
+}
+.spot-dark {
+  --spot: rgb(255 255 255 / 0.07);
+}
+@media (hover: hover) and (pointer: fine) {
+  .spot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(420px circle at var(--x, 50%) var(--y, 50%), var(--spot), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .spot:hover::after {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Hero entrance: one orchestrated sequence, ordered by --i. */
+  .intro {
+    animation: intro 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 60ms + 100ms);
+  }
+  @keyframes intro {
+    from {
+      opacity: 0;
+      transform: translateY(0.45em);
+      filter: blur(10px);
+    }
+  }
+  .mesh {
+    animation:
+      mesh-in 1.8s ease-out both,
+      drift 18s ease-in-out 1.8s infinite alternate;
+  }
+  @keyframes mesh-in {
+    from {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+  }
+
+  /* Live mockups */
+  .live-dot {
+    animation: live 1.6s ease-in-out infinite;
+  }
+  @keyframes live {
+    50% { opacity: 0.3; }
+  }
+  .route-draw {
+    stroke-dasharray: 0.012 0.014;
+    animation: route-flow 6s linear infinite;
+  }
+  @keyframes route-flow {
+    to { stroke-dashoffset: -0.26; }
+  }
+  .ping {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ping 1.8s ease-out infinite;
+  }
+  @keyframes ping {
+    from { transform: scale(0.4); opacity: 0.5; }
+    to { transform: scale(1.6); opacity: 0; }
+  }
+  .scan-in {
+    animation: scan-in 0.6s ease-out;
+  }
+  @keyframes scan-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+      background: var(--color-link-bg-soft);
+    }
+  }
+  .tick {
+    animation: tick 0.9s ease-out;
+  }
+  @keyframes tick {
+    from { background: var(--color-canvas-soft-2); }
+  }
+}
+
+/* Demo micro-interactions */
+.spin {
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    animation: toast 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @keyframes toast {
+    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  }
+  .hint {
+    animation: hint 2s ease-in-out infinite;
+  }
+  @keyframes hint {
+    50% { opacity: 0.55; }
+  }
+  .pop {
+    animation: pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  @keyframes pop {
+    from { transform: scale(0.6); }
+  }
+  .step-in {
+    animation: step-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @keyframes step-in {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+  .print-in {
+    animation: print-in 0.9s steps(12, end);
+  }
+  @keyframes print-in {
+    from { clip-path: inset(0 0 100% 0); }
+  }
+  .qr-in {
+    animation: qr-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @keyframes qr-in {
+    from { opacity: 0; transform: scale(0.85) rotate(-4deg); filter: blur(6px); }
+  }
+}
